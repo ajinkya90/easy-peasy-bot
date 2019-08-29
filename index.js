@@ -72,7 +72,6 @@ controller.on('rtm_open', function (bot) {
 
 controller.on('rtm_close', function (bot) {
     console.log('** The RTM api just closed');
-    // you may want to attempt to re-open
 });
 
 
@@ -80,13 +79,32 @@ controller.on('rtm_close', function (bot) {
  * Core bot logic goes here!
  */
 // BEGIN EDITING HERE!
-
+var request = require('request');
 controller.on('bot_channel_join', function (bot, message) {
     bot.reply(message, "I'm here!")
 });
 
+controller.hears(['mdb ep'], ['direct_mention', 'mention', 'direct_message'], function (bot, message) {
+    text_array = message.text.split(" ")
+    node_name = text_array[2]
+    node_name_updated = ''
+    if (node_name.includes("https") || node_name.includes("http")){
+        if(node_name.includes("|")) {
+            node_name_updated = node_name.substring(node_name.lastIndexOf("|") + 1, node_name.lastIndexOf(">"))
+        }else{
+            node_name_updated = node_name.substring(node_name.lastIndexOf("/") + 1, node_name.lastIndexOf(">"))
+        }
+    }else{
+        node_name_updated = node_name
+    }
+    request('https://infraapi.global.clover.network/mdb/v1/endpoints/' + node_name_updated, function (err, response, body) {
+    bot.reply(message, '```\n' + JSON.stringify(JSON.parse(body), null, 2) + '\n```');
+    });
+});
+
 controller.hears('hello', 'direct_message', function (bot, message) {
-    bot.reply(message, 'Hello!');
+    bot.reply(message, message.text);
+
 });
 
 
